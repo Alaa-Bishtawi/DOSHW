@@ -1,67 +1,60 @@
 import sqlite3
-
-from flask import Flask , request
-
-
+from flask import Flask, request
 import json
+import requests as requests
+from flask.wrappers import Response
+from werkzeug.wrappers import response
 app = Flask(__name__)
+
+catalog_server = "http://192.168.1.129:3000"
+order_server = "http://192.168.1.129:5000"
+
+
+@app.route('/items', methods=['GET'])
+def query_by_item_search():
+    response = requests.get(url=catalog_server+"/items")
+    return response
+
+
+@app.route('/search/topic', methods=['GET'])
+def query_by_subject_search():
+    topic_name = request.args.get("name")
+    response = requests.get(url=catalog_server+"/topic", params=topic_name)
+    return response
+
+
+@app.route('/search/itemnumber', methods=['GET'])
+def search_by_item_number():
+    item_number = request.args.get("item_number")
+    response = requests.get(
+        url=catalog_server+"/itemnumber", params=item_number)
+    return response
+
+
 @app.route('/update/stock', methods=['GET'])
 def update_stock():
-    id = request.args.get("book_id")
+    id_item = request.args.get("book_id")
     stock_avilable_number = request.args.get("stock")
-    conn = sqlite3.connect('books.db')
-    cur = conn.cursor()
-    cur.execute(f"UPDATE book SET stock_avilable_number = {stock_avilable_number} where book_id={id};")
-    conn.commit()
-
-
-    return ""
-
-
+    response = requests.get(
+        url=catalog_server+"/update/stock", params={id_item, stock_avilable_number})
+    return response
 
 
 @app.route('/update/cost', methods=['GET'])
 def update_cost():
-    id = request.args.get("book_id")
+    id_item = request.args.get("book_id")
     cost = request.args.get("cost")
-    conn = sqlite3.connect('books.db')
-    cur = conn.cursor()
-    cur.execute(f"UPDATE book SET cost = {cost} where book_id={id};")
-    conn.commit()
 
 
-    return ""
-@app.route('/topic', methods=['GET'])
-def query_by_subject_search():
-    topic = request.args.get("topic")
-    conn = sqlite3.connect('books.db')
-    cur = conn.cursor()
-    cur.execute(f"SELECT topic_id FROM topics WHERE topic_name =  '{topic}';")
-    result = cur.fetchone()
-    cur.execute(f"SELECT * FROM book where topic_id = {result[0]};")#transfer for json
-    all_results = cur.fetchall()
-    print(all_results)#transfer to json
-    return ""
-@app.route('/item', methods=['GET'])
-def query_by_item_search():
-    id = request.args.get("id")
-    conn = sqlite3.connect('books.db')
-    cur = conn.cursor()
-    cur.execute(f"SELECT * FROM book WHERE book_id =  '{id}';")
-    result = cur.fetchone()
-    print(result)
-    return ""
-def update_cost():
-    return
-def update_stock():
-    increaseDecrease = True
+@app.route('/purchase', methods=['GET'])
+def purchase():
+    item_number = request.args.get("item_number")
+    response = requests.get(url=order_server+"/purchase", params=item_number)
+    return response
 
-@app.route('/itemnumber', methods=['GET'])
-def search_by_item_number():
-    return
-@app.route('/check')
+
+@app.route('/')
 def hello_world():
-    # a Python object (dict):
     x = {
         "stock": True
     }
