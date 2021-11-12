@@ -4,7 +4,7 @@ from flask import Flask, request
 import json
 app = Flask(__name__)
 
-catalog_server_ip = "http://192.168.1.129:3000"
+catalog_server_ip = "http://127.0.0.1:5000"
 
 
 @app.route('/purchase', methods=['GET'])
@@ -22,11 +22,11 @@ def purchase():
     success = json.dumps(success)
     fails = json.dumps(fails)
     stock_check = requests.get(
-        url=catalog_server_ip+"/check", params=item_number)
+        url=catalog_server_ip+"/check", params={"item_number": item_number})
     stock_check_json = stock_check.json()
-    if stock_check_json['stock'] == True:
-        purchase_confirm = requests.get(url=catalog_server_ip +
-                                        "/update/stock/dec", params=item_number)
+    if stock_check_json["stock_check"] == True:
+        requests.get(
+            url=catalog_server_ip+"/update/stock/dec", params={"item_number": item_number})
         return success
     else:
         return fails
@@ -38,4 +38,4 @@ def hello_world():
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(port=8000)
