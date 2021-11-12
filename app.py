@@ -72,7 +72,7 @@ def update_cost():
     })
 
 
-@app.route('/update/stock/dec', methods=['GET'])
+@app.route('/update/stock/dec', methods=['POST'])
 def update_stock_dec():
     id_item = request.args.get("item_number")
     conn = sqlite3.connect('books.db')
