@@ -6,8 +6,8 @@ from flask.wrappers import Response
 from werkzeug.wrappers import response
 app = Flask(__name__)
 
-catalog_server = "http://192.168.1.129:3000"
-order_server = "http://192.168.1.129:5000"
+catalog_server = "http://192.168.1.129:8000"
+order_server = "http://192.168.1.129:9000"
 
 
 @app.route('/search/topic', methods=['GET'])
@@ -17,7 +17,7 @@ def query_by_subject_search():
     return response
 
 
-@app.route('/search/itemnumber', methods=['GET'])
+@app.route('/search/itemnumber/', methods=['GET'])
 def search_by_item_number():
     item_number = request.args.get("item_number")
     response = requests.get(
@@ -25,25 +25,25 @@ def search_by_item_number():
     return response
 
 
-@app.route('/update/stock', methods=['GET'])
+@app.route('/update/stock', methods=['PATCH'])
 def update_stock():
-    id_item = request.args.get("book_id")
+    id_item = request.args.get("item_number")
     stock = request.args.get("stock")
     response = requests.get(
         url=catalog_server+"/update/stock", params={id_item, stock})
     return response
 
 
-@app.route('/update/cost', methods=['GET'])
+@app.route('/update/cost', methods=['PATCH'])
 def update_cost():
-    id_item = request.args.get("book_id")
+    id_item = request.args.get("item_number")
     cost = request.args.get("cost")
     response = requests.get(
-        url=catalog_server+"/update/stock", params={id_item, cost})
+        url=catalog_server+"/update/stock", params={"item_number": id_item, "cost": cost})
     return response
 
 
-@app.route('/purchase', methods=['GET'])
+@app.route('/purchase', methods=['POST'])
 def purchase():
     item_number = request.args.get("item_number")
     response = requests.get(url=order_server+"/purchase", params=item_number)
