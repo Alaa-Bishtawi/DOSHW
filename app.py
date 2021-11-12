@@ -12,8 +12,6 @@ def query_by_subject_search():
     cur = conn.cursor()
     cur.execute(f"SELECT topic_id FROM topics WHERE topic_name =  '{topic}';")
     result = cur.fetchone()
-
-    # transfer for json
     cur.execute(f"SELECT * FROM book where topic_id = {result[0]};")
     all_results = cur.fetchall()
     print(all_results)  # transfer to json
@@ -23,26 +21,32 @@ def query_by_subject_search():
 
     }
     for item in all_results:
-        jsonRes["items"].append(item[0])
+        jsonRes["items"].append({"book_id": item[3], "book_name": item[0]})
     return json.dumps(jsonRes)
 
 
 @app.route('/search/itemnumber', methods=['GET'])
 def query_by_item_search():
-    id = request.args.get("id")
+    id_item = request.args.get("item_number")
     conn = sqlite3.connect('books.db')
     cur = conn.cursor()
-    cur.execute(f"SELECT * FROM book WHERE book_id =  '{id}';")
+    cur.execute(f"SELECT * FROM book WHERE book_id =  '{id_item}';")
     result = cur.fetchone()
     print(result)
     return json.dumps({
-        "status": HTTPStatus.OK
+        "status": HTTPStatus.OK,
+        "book_id": result[3],
+        "book_name": result[0],
+        "cost": result[2],
+        "topic": result[4],
+        "stock": result[1],
+
     })
 
 
-@app.route('/update/stock', methods=['GET'])
+@app.route('/update/stock', methods=['PATCH'])
 def update_stock():
-    id_item = request.args.get("book_id")
+    id_item = request.args.get("item_number")
     stock_avilable_number = request.args.get("stock")
     conn = sqlite3.connect('books.db')
     cur = conn.cursor()
@@ -54,30 +58,31 @@ def update_stock():
     })
 
 
-@app.route('/update/cost', methods=['GET'])
+@app.route('/update/cost', methods=['PATCH'])
 def update_cost():
-    id_item = request.args.get("book_id")
+    id_item = request.args.get("item_number")
     cost = request.args.get("cost")
     conn = sqlite3.connect('books.db')
     cur = conn.cursor()
-    cur.execute(f"UPDATE book SET cost = {cost} where book_id={id_item};")
+    cur.execute(
+        f"UPDATE book SET cost = {cost} where book_id={id_item};")
     conn.commit()
     return json.dumps({
         "status": HTTPStatus.OK
     })
 
 
-@app.route('/update/cost/dec', methods=['GET'])
-def update_cost_dec():
-    id_item = request.args.get("book_id")
-    cost = request.args.get("cost")
+@app.route('/update/stock/dec', methods=['GET'])
+def update_stock_dec():
+    id_item = request.args.get("item_number")
     conn = sqlite3.connect('books.db')
     cur = conn.cursor()
-    cur.execute(f"Select cost where book_id={id_item};")
-    cost_current = conn.fetch()
+    cur.execute(
+        f"Select stock_avilable_number FROM book where book_id={id_item};")
+    stock_avilable_number_current = cur.fetchone()
     cur = conn.cursor()
     cur.execute(
-        f"UPDATE book SET cost = {cost_current-1} where book_id={id_item};")
+        f"UPDATE book SET stock_avilable_number = {stock_avilable_number_current[0]-1} where book_id={id_item};")
     conn.commit()
     return json.dumps({
         "status": HTTPStatus.OK
@@ -86,12 +91,17 @@ def update_cost_dec():
 
 @app.route('/check')
 def hello_world():
-    # a Python object (dict):
-    x = {
-        "stock": True
-    }
-    y = json.dumps(x)
-    return y
+    id_item = request.args.get("item_number")
+    conn = sqlite3.connect('books.db')
+    cur = conn.cursor()
+    cur.execute(
+        f"SELECT stock_avilable_number FROM book WHERE book_id =  '{id_item}';")
+    result = cur.fetchone()
+    print(result)
+    return json.dumps({
+        "status": HTTPStatus.OK,
+        "stock_check": result[0] > 0 if True else False
+    })
 
 
 if __name__ == '__main__':
