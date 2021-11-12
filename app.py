@@ -4,10 +4,10 @@ from flask import Flask, request
 import json
 app = Flask(__name__)
 
-catalog_server_ip = "http://127.0.0.1:5000"
+catalog_server_ip = "http://192.168.56.103:5000"
 
 
-@app.route('/purchase', methods=['GET'])
+@app.route('/purchase', methods=['POST'])
 def purchase():
     item_number = request.args.get("item_number")
 
@@ -38,4 +38,4 @@ def hello_world():
 
 
 if __name__ == '__main__':
-    app.run(port=8000)
+    app.run()
