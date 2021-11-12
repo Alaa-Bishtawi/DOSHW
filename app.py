@@ -10,12 +10,6 @@ catalog_server = "http://192.168.1.129:3000"
 order_server = "http://192.168.1.129:5000"
 
 
-@app.route('/items', methods=['GET'])
-def query_by_item_search():
-    response = requests.get(url=catalog_server+"/items")
-    return response
-
-
 @app.route('/search/topic', methods=['GET'])
 def query_by_subject_search():
     topic_name = request.args.get("name")
@@ -34,9 +28,9 @@ def search_by_item_number():
 @app.route('/update/stock', methods=['GET'])
 def update_stock():
     id_item = request.args.get("book_id")
-    stock_avilable_number = request.args.get("stock")
+    stock = request.args.get("stock")
     response = requests.get(
-        url=catalog_server+"/update/stock", params={id_item, stock_avilable_number})
+        url=catalog_server+"/update/stock", params={id_item, stock})
     return response
 
 
@@ -44,6 +38,9 @@ def update_stock():
 def update_cost():
     id_item = request.args.get("book_id")
     cost = request.args.get("cost")
+    response = requests.get(
+        url=catalog_server+"/update/stock", params={id_item, cost})
+    return response
 
 
 @app.route('/purchase', methods=['GET'])
@@ -55,12 +52,8 @@ def purchase():
 
 @app.route('/')
 def hello_world():
-    x = {
-        "stock": True
-    }
-    y = json.dumps(x)
-    return y
+    return "front end is working ..."
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(port=7000)
