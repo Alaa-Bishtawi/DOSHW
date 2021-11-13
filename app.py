@@ -4,6 +4,8 @@ from flask import Flask, request
 import json
 app = Flask(__name__)
 
+# takes path variable (name) as a string to get back all the items
+
 
 @app.route('/search/topic', methods=['GET'])
 def query_by_subject_search():
@@ -24,6 +26,8 @@ def query_by_subject_search():
         jsonRes["items"].append({"book_id": item[3], "book_name": item[0]})
     return json.dumps(jsonRes)
 
+# take path variable (item_number) as a int id to return all relevant data
+
 
 @app.route('/search/itemnumber', methods=['GET'])
 def query_by_item_search():
@@ -43,6 +47,8 @@ def query_by_item_search():
 
     })
 
+# take 2 path variables (item_number,stock) as ints to update stock
+
 
 @app.route('/update/stock', methods=['PATCH'])
 def update_stock():
@@ -56,6 +62,8 @@ def update_stock():
     return json.dumps({
         "status": HTTPStatus.OK
     })
+
+# take 2 path variables (item_number,cost) as ints to update cost
 
 
 @app.route('/update/cost', methods=['PATCH'])
@@ -72,6 +80,7 @@ def update_cost():
     })
 
 
+# take path variable (item_number) as ints to dec stock by 1 after purchase
 @app.route('/update/stock/dec', methods=['POST'])
 def update_stock_dec():
     id_item = request.args.get("item_number")
@@ -87,6 +96,8 @@ def update_stock_dec():
     return json.dumps({
         "status": HTTPStatus.OK
     })
+
+# take path variable (item_number) as int to check stock
 
 
 @app.route('/check')
