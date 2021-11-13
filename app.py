@@ -4,13 +4,10 @@ import json
 import requests as requests
 app = Flask(__name__)
 
-<< << << < HEAD
 catalog_server = "http://192.168.56.103:5000"
 order_server = "http://192.168.56.104:5000"
-== == == =
-catalog_server = "http://192.168.1.129:8000"
-order_server = "http://192.168.1.129:9000"
->>>>>> > 119f7a322c07278287155bcad2bd539586744184
+
+# just normal pass-through of the requests to the other servcies
 
 
 @app.route('/search/topic', methods=['GET'])
