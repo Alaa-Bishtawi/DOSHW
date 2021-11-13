@@ -6,17 +6,19 @@ app = Flask(__name__)
 
 catalog_server_ip = "http://192.168.56.103:5000"
 
+# take path variable (item_number) as int to make a purchase
+
 
 @app.route('/purchase', methods=['POST'])
 def purchase():
     item_number = request.args.get("item_number")
 
     success = {
-        "purchase_status": "Sucessful",
+        "purchase_status": "Sucessful"+" item_number:"+item_number,
         "status": HTTPStatus.OK
     }
     fails = {
-        "purchase_status": "No Stock",
+        "purchase_status": "No Stock"+" item_number:"+item_number,
         "status": HTTPStatus.OK
     }
     success = json.dumps(success)
