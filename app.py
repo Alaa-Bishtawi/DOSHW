@@ -25,7 +25,7 @@ def purchase():
         url=catalog_server_ip+"/check", params={"item_number": item_number})
     stock_check_json = stock_check.json()
     if stock_check_json["stock_check"] == True:
-        requests.get(
+        requests.post(
             url=catalog_server_ip+"/update/stock/dec", params={"item_number": item_number})
         return success
     else:
