@@ -48,8 +48,8 @@ def update_cost():
 @app.route('/purchase', methods=['POST'])
 def purchase():
     item_number = request.args.get("item_number")
-    response = requests.get(url=order_server+"/purchase",
-                            params={"item_number": item_number})
+    response = requests.post(url=order_server+"/purchase",
+                             params={"item_number": item_number})
     return response.json()
 
 
