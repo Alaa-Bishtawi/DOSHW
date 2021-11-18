@@ -14,3 +14,5 @@ have the front end server
 2- installing flask 
 ### config
 changing ip's of the servers inside the files, each in order server and front end server where there is a refrence and requests to other servers.
+### docs
+https://drive.google.com/file/d/1YpQXl2ZVazr5FCETpDbFVIN5mHgMvzoI/view?usp=sharing
