@@ -1,9 +1,13 @@
 import sqlite3
 from http import HTTPStatus
 from flask import Flask, request
+import requests
 import json
 app = Flask(__name__)
 
+front_server="http://localhost:5000"
+server_name="catalog"
+server_number="1"
 # takes path variable (name) as a string to get back all the items
 
 
@@ -58,7 +62,15 @@ def update_stock():
     cur = conn.cursor()
     cur.execute(
         f"UPDATE book SET stock_avilable_number = {stock_avilable_number} where book_id={id_item};")
+    
+    requests.delete(url=front_server+"/cache",params={"key":"book"+id_item})
+    cur.execute(f"SELECT topic_id FROM book where book_id = {id_item};")
+    results = cur.fetchone()
+    cur.execute(f"SELECT topic_name FROM topic where topic_id = {results[0]};")
+    results = cur.fetchone()
     conn.commit()
+    requests.delete(url=front_server+"/cache",params={"key":"topic"+str(results[0])})
+    
     return json.dumps({
         "status": HTTPStatus.OK
     })
@@ -72,9 +84,14 @@ def update_cost():
     cost = request.args.get("cost")
     conn = sqlite3.connect('books.db')
     cur = conn.cursor()
-    cur.execute(
-        f"UPDATE book SET cost = {cost} where book_id={id_item};")
+    cur.execute(f"UPDATE book SET cost = {cost} where book_id={id_item};")
+    cur.execute(f"SELECT topic_id FROM book where book_id = {id_item};")
+    results = cur.fetchone()
     conn.commit()
+    requests.delete(url=front_server+"/cache",params={"key":"book"+id_item})
+    print(results)
+    requests.delete(url=front_server+"/cache",params={"key":"topic"+str(results[0])})
+    
     return json.dumps({
         "status": HTTPStatus.OK
     })
@@ -86,13 +103,12 @@ def update_stock_dec():
     id_item = request.args.get("item_number")
     conn = sqlite3.connect('books.db')
     cur = conn.cursor()
-    cur.execute(
-        f"Select stock_avilable_number FROM book where book_id={id_item};")
+    cur.execute(f"Select stock_avilable_number FROM book where book_id={id_item};")
     stock_avilable_number_current = cur.fetchone()
     cur = conn.cursor()
-    cur.execute(
-        f"UPDATE book SET stock_avilable_number = {stock_avilable_number_current[0]-1} where book_id={id_item};")
+    cur.execute(f"UPDATE book SET stock_avilable_number = {stock_avilable_number_current[0]-1} where book_id={id_item};")
     conn.commit()
+    requests.delete(url=front_server+"/cache",params={"key":"book"+id_item})
     return json.dumps({
         "status": HTTPStatus.OK
     })
@@ -113,6 +129,10 @@ def hello_world():
         "status": HTTPStatus.OK,
         "stock_check": result[0] > 0 if True else False
     })
+
+@app.route('/up')
+def up():
+    requests.get(url=front_server,params={"server_name":server_name,"server_number":server_number})
 
 
 if __name__ == '__main__':
