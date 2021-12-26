@@ -1,37 +1,116 @@
 import sqlite3
-from flask import Flask, request
 import json
-import requests as requests
+from flask import Flask, request
+import httplib
 app = Flask(__name__)
+
+catalog_server_1 = "1"
+catalog_server_2 = "1"
+order_server_1 = "1"
+order_server_2 = "1"
+
+catalog_server_1_stock = []
+catalog_server_2_stock = []
+catalog_server_1_cost = []
+catalog_server_2_cost = []
+order_server_1_q = []
+order_server_2_q = []
+
 
 catalog_server = "http://192.168.56.103:5000"
 order_server = "http://192.168.56.104:5000"
 
-# just normal pass-through of the requests to the other servcies
+loadbalance_flag = True
+read_cache = dict()
 
 
+def cache_put(key, value):
+    read_cache[key] = value
+
+
+def cache_get(key):
+    return read_cache.get(key)
+
+
+def cache_pop(key):
+    read_cache.pop(key)
+
+
+# just simple forwarding of the request of the request to the other servcies
 @app.route('/search/topic', methods=['GET'])
 def query_by_subject_search():
     topic_name = request.args.get("name")
-    response = requests.get(
-        url=catalog_server+"/search/topic", params={"name": topic_name})
-    return response.json()
+    cache = cache_get("topic:"+topic_name)
+    if cache == None:
+        if loadbalance_flag == True:
+            global loadbalance_flag
+            loadbalance_flag = False
+            try:
+                response = request.get(
+                    url=catalog_server_1+"/search/topic", params={"name": topic_name})
+            except:
+                response = request.get(
+                    url=catalog_server_2+"/search/topic", params={"name": topic_name})
+        elif loadbalance_flag == False:
+            global loadbalance_flag
+            loadbalance_flag = True
+            try:
+                response = request.get(
+                    url=catalog_server_2+"/search/topic", params={"name": topic_name})
+            except:
+                response = request.get(
+                    url=catalog_server_1+"/search/topic", params={"name": topic_name})
+        cache_put("topic:"+topic_name, response.json())
+        return response.json()
+    else:
+        return cache
 
 
 @app.route('/search/itemnumber/', methods=['GET'])
 def search_by_item_number():
     item_number = request.args.get("item_number")
-    response = requests.get(
-        url=catalog_server+"/search/itemnumber", params={"item_number": item_number})
-    return response.json()
+    cache = cache_get("book:"+item_number)
+    if cache == None:
+        if loadbalance_flag == True:
+            global loadbalance_flag
+            loadbalance_flag = False
+            try:
+                response = request.get(
+                    url=catalog_server_1+"/search/itemnumber", params={"item_number": item_number})
+            except:
+                response = request.get(
+                    url=catalog_server_2+"/search/itemnumber", params={"item_number": item_number})
+        elif loadbalance_flag == False:
+            global loadbalance_flag
+            loadbalance_flag = True
+            try:
+                response = request.get(
+                    url=catalog_server_2+"/search/itemnumber", params={"item_number": item_number})
+            except:
+                response = request.get(
+                    url=catalog_server_1+"/search/itemnumber", params={"item_number": item_number})
+        cache_put("book:"+item_number, response.json())
+        return response.json()
+    else:
+        return cache
 
 
 @app.route('/update/stock', methods=['PATCH'])
 def update_stock():
     id_item = request.args.get("item_number")
     stock = request.args.get("stock")
-    response = requests.get(
-        url=catalog_server+"/update/stock", params={"item_number": id_item, "stock": stock})
+    try:
+        url = catalog_server_1+"/update/stock"
+        params = {"item_number": id_item, "stock": stock}
+        response = request.get(url, params)
+    except:
+        catalog_server_1_stock.append({"url": url, "params": params})
+    try:
+        url = catalog_server_2+"/update/stock"
+        params = {"item_number": id_item, "stock": stock}
+        response = request.get(url, params)
+    except:
+        catalog_server_2_stock.append({"url": url, "params": params})
     return response.json()
 
 
@@ -39,23 +118,91 @@ def update_stock():
 def update_cost():
     id_item = request.args.get("item_number")
     cost = request.args.get("cost")
-    response = requests.get(
-
-        url=catalog_server+"/update/cost", params={"item_number": id_item, "cost": cost})
+    try:
+        url = catalog_server_1+"/update/cost"
+        params = {"item_number": id_item, "cost": cost}
+        response = request.get(url, params)
+    except:
+        catalog_server_1_cost.append({"url": url, "params": params})
+    try:
+        url = catalog_server_2+"/update/cost"
+        params = {"item_number": id_item, "cost": cost}
+        response = request.get(url, params)
+    except:
+        catalog_server_2_cost.append({"url": url, "params": params})
     return response.json()
 
 
 @app.route('/purchase', methods=['POST'])
 def purchase():
     item_number = request.args.get("item_number")
-    response = requests.post(url=order_server+"/purchase",
-                             params={"item_number": item_number})
+    try:
+        url = order_server_1+"/purchase"
+        params = {"item_number": item_number}
+        response = request.post(url, params)
+    except:
+        order_server_1_q.append({"url": url, "params": params})
+    try:
+        url = order_server_2+"/purchase"
+        params = {"item_number": item_number}
+        response = request.post(url, params)
+    except:
+        order_server_2_q.append({"url": url, "params": params})
     return response.json()
+
+
+@app.route('/serverup', methods=['GET'])
+def serverup():
+    server_name = request.args.get("server_name")
+    server_number = request.args.get("server_number")
+    try:
+        if server_name == "catalog":
+            if server_number == "1":
+                if len(catalog_server_1_cost) > 0:
+                    for x in catalog_server_1_cost:
+                        response = request.get(
+                            x["url"], x["params"])
+                if len(catalog_server_1_stock) > 0:
+                    for x in catalog_server_1_stock:
+                        response = request.get(
+                            x["url"], x["params"])
+            elif server_number == "2":
+                if len(catalog_server_2_cost) > 0:
+                    for x in catalog_server_2_cost:
+                        response = request.get(
+                            x["url"], x["params"])
+                if len(catalog_server_2_stock) > 0:
+                    for x in catalog_server_2_stock:
+                        response = request.get(
+                            x["url"], x["params"])
+        if server_name == "order":
+            if server_number == "1":
+                if len(order_server_1_q) > 0:
+                    for x in order_server_1_q:
+                        response = request.get(
+                            x["url"], x["params"])
+            elif server_number == "2":
+                if len(order_server_2_q) > 0:
+                    for x in order_server_2_q:
+                        response = request.get(
+                            x["url"], x["params"])
+    except:
+        return "server up problem"
 
 
 @app.route('/')
 def hello_world():
-    return "front end is working ..."
+    return "front end is working..."
+
+
+@app.route('/cache', methods=["DELETE"])
+def cache_invalidate():
+    cache_key = request.args.get("key")
+    if cache_get(cache_key) != None:
+        cache_pop(cache_key)
+        return httplib.NOT_FOUND
+    else:
+        return httplib.OK
 
 
 if __name__ == '__main__':
