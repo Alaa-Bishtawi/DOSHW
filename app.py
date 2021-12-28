@@ -5,6 +5,7 @@ from http import HTTPStatus
 import requests
 app = Flask(__name__)
 
+
 catalog_server_1 = "http://127.0.0.1:5001"
 catalog_server_2 = "1"
 order_server_1 = "1"
@@ -106,16 +107,19 @@ def update_stock():
         url = catalog_server_1+"/update/stock"
         params = {"item_number": id_item, "stock": stock}
         response = requests.patch(url=url, params=params)
+        print(response)
+        return response.json()
     except:
         catalog_server_1_stock.append({"url": url, "params": params})
     try:
         url = catalog_server_2+"/update/stock"
         params = {"item_number": id_item, "stock": stock}
         response = requests.patch(url=url, params=params)
+        print(response)
+        return response.json()
     except:
         catalog_server_2_stock.append({"url": url, "params": params})
-    print(response)
-    return response.json()
+    return "200"
 
 
 @app.route('/update/cost', methods=['PATCH'])
@@ -126,16 +130,21 @@ def update_cost():
         url = catalog_server_1+"/update/cost"
         params = {"item_number": id_item, "cost": cost}
         response = requests.patch(url=url, params=params)
+        print(response)
+        return response.json()
     except:
         catalog_server_1_cost.append({"url": url, "params": params})
     try:
         url = catalog_server_2+"/update/cost"
         params = {"item_number": id_item, "cost": cost}
         response = requests.patch(url=url, params=params)
+        print(response)
+        return response.json()
     except:
         catalog_server_2_cost.append({"url": url, "params": params})
-    print(response)
-    return response.json()
+    print(catalog_server_1_cost)
+    return "200"
+    
 
 
 @app.route('/purchase', methods=['POST'])
@@ -167,30 +176,40 @@ def serverup():
                     for x in catalog_server_1_cost:
                         response = requests.patch(
                             x["url"], x["params"])
+                    catalog_server_1_cost.clear()
                 if len(catalog_server_1_stock) > 0:
                     for x in catalog_server_1_stock:
                         response = requests.patch(
                             x["url"], x["params"])
+                    catalog_server_1_stock.clear()
             elif server_number == "2":
                 if len(catalog_server_2_cost) > 0:
                     for x in catalog_server_2_cost:
                         response = requests.patch(
                             x["url"], x["params"])
+                    catalog_server_2_cost.clear()
                 if len(catalog_server_2_stock) > 0:
                     for x in catalog_server_2_stock:
                         response = requests.patch(
                             x["url"], x["params"])
+                    catalog_server_2_stock.clear()
         if server_name == "order":
             if server_number == "1":
                 if len(order_server_1_q) > 0:
                     for x in order_server_1_q:
                         response = requests.patch(
                             x["url"], x["params"])
+                    order_server_1_q.clear()
             elif server_number == "2":
                 if len(order_server_2_q) > 0:
                     for x in order_server_2_q:
                         response = request.get(
                             x["url"], x["params"])
+                    order_server_1_q.clear()
+        return json.dumps({
+        "status": HTTPStatus.OK
+    })
+        
     except:
         return "server up problem"
 
@@ -211,4 +230,5 @@ def cache_invalidate():
 
 
 if __name__ == '__main__':
-    app.run(port=7000)
+    print("a")
+    app.run(port=5000)
