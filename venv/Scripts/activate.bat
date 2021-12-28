@@ -9,7 +9,7 @@ if defined _OLD_CODEPAGE (
 )
 
 set VIRTUAL_ENV=C:\Users\firas\Documents\GitHub\doshw3\venv
-
+set FLASK_DEBUG=1
 if not defined PROMPT set PROMPT=$P$G
 
 if defined _OLD_VIRTUAL_PROMPT set PROMPT=%_OLD_VIRTUAL_PROMPT%

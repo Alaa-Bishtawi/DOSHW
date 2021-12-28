@@ -8,9 +8,8 @@ app = Flask(__name__)
 front_server="http://localhost:5000"
 server_name="catalog"
 server_number="1"
+
 # takes path variable (name) as a string to get back all the items
-
-
 @app.route('/search/topic', methods=['GET'])
 def query_by_subject_search():
     topic = request.args.get("name")
@@ -115,7 +114,6 @@ def update_stock_dec():
 
 # take path variable (item_number) as int to check stock
 
-
 @app.route('/check')
 def hello_world():
     id_item = request.args.get("item_number")
@@ -130,10 +128,11 @@ def hello_world():
         "stock_check": result[0] > 0 if True else False
     })
 
-@app.route('/up')
+@app.route('/')
 def up():
-    requests.get(url=front_server,params={"server_name":server_name,"server_number":server_number})
+    requests.get(url=front_server+'/serverup',params={"server_name":server_name,"server_number":server_number})
+    print("****server waking up script")
 
-
-if __name__ == '__main__':
-    app.run(port=9000)
+if __name__ == "__main__":
+    up()
+    app.run(port=5001)
