@@ -16,3 +16,5 @@ have the front end server
 changing ip's of the servers inside the files, each in order server and front end server where there is a refrence and requests to other servers.
 ### docs
 https://drive.google.com/file/d/1YpQXl2ZVazr5FCETpDbFVIN5mHgMvzoI/view?usp=sharing
+### docs P2
+https://drive.google.com/file/d/13tXt7tF0YMW0E_VoE6fKoYa9UCIM_nsz/view?usp=sharing
